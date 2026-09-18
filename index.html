@@ -1,38 +1,222 @@
-      radial-gradient(circle at 85% 90%, rgba(74,120,86,0.16), transparent 50%),
-      var(--sand);
-    font-family:'Work Sans', sans-serif;
-    color:var(--forest-deep);
-    display:flex;
-    justify-content:center;
-    padding:28px 16px 60px;
-  }
-  .stage{
-    width:100%;
-    max-width:640px;
-  }
-  .masthead{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    margin-bottom:22px;
-    border-bottom:2px solid var(--forest);
-    padding-bottom:14px;
-  }
-  .masthead .brand{
-    font-family:'Fraunces', serif;
-    font-weight:700;
-    font-size:1.05rem;
-    letter-spacing:0.01em;
-    color:var(--forest);
-  }
-  .masthead .brand span{ color:var(--gold); }
-  .masthead a{
-    font-size:0.8rem;
-    color:var(--bark);
-    text-decoration:none;
-    border-bottom:1px solid var(--bark);
-  }
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Renovaterra</title>
+    <meta
+      name="description"
+      content="Quiz interativo sobre sustentabilidade e cuidado com o planeta."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="masthead">
+        <div class="brand">Quiz <span>Renovaterra</span></div>
+        <a href="#" class="link" id="reset-link">Reiniciar</a>
+      </header>
 
-  /* INTRO */
-  #intro h1{
-    font-family:'Fraunces', serif;
+      <main class="quiz-card">
+        <section id="intro" class="panel">
+          <p class="eyebrow">Desafio de sustentabilidade</p>
+          <h1>Teste seus conhecimentos sobre o planeta</h1>
+          <p>
+            Responda às perguntas e descubra o quanto você sabe sobre práticas
+            sustentáveis, consumo consciente e cuidado com a natureza.
+          </p>
+          <button id="start-btn" class="primary" type="button">Começar</button>
+        </section>
+
+        <section id="question-panel" class="question-panel hidden" aria-live="polite">
+          <div class="progress" aria-label="Progresso do quiz">
+            <span id="progress-bar" class="progress-bar"></span>
+          </div>
+          <p id="question-index" class="question-index">Pergunta 1</p>
+          <h2 id="question-text">Texto da pergunta</h2>
+          <div id="answers" class="answers"></div>
+          <button id="next-btn" class="primary hidden" type="button">Próxima</button>
+        </section>
+
+        <section id="result" class="panel hidden">
+          <p class="eyebrow">Resultado</p>
+          <h2 id="result-title">Você terminou!</h2>
+          <p id="result-message">Sua pontuação aparecerá aqui.</p>
+          <button id="restart-btn" class="primary" type="button">Jogar de novo</button>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const questions = [
+        {
+          question: 'Qual prática ajuda a reduzir a quantidade de resíduos gerados em casa?',
+          options: [
+            'Comprar produtos embalados individualmente',
+            'Separar recicláveis e reaproveitar materiais',
+            'Jogar todo material no mesmo lixo',
+            'Usar descartáveis em todos os momentos'
+          ],
+          correct: 1
+        },
+        {
+          question: 'O que é energia renovável?',
+          options: [
+            'Energia que não pode ser usada no futuro',
+            'Energia gerada a partir de fontes que se renovam naturalmente',
+            'Energia produzida apenas em usinas nucleares',
+            'Energia que depende de carvão mineral'
+          ],
+          correct: 1
+        },
+        {
+          question: 'Qual ação é mais importante para preservar a água?',
+          options: [
+            'Deixar a torneira aberta durante o banho',
+            'Consertar vazamentos e reduzir o desperdício',
+            'Usar mais água em limpeza pesada',
+            'Desligar o chuveiro apenas em dias quentes'
+          ],
+          correct: 1
+        },
+        {
+          question: 'Qual alternativa representa uma atitude sustentável no transporte?',
+          options: [
+            'Usar transporte coletivo ou bicicleta sempre que possível',
+            'Dirigir sozinho em todas as viagens',
+            'Ignorar manutenção do veículo',
+            'Acumular combustível em excesso'
+          ],
+          correct: 0
+        }
+      ];
+
+      const intro = document.getElementById('intro');
+      const questionPanel = document.getElementById('question-panel');
+      const resultPanel = document.getElementById('result');
+      const startBtn = document.getElementById('start-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const restartBtn = document.getElementById('restart-btn');
+      const resetLink = document.getElementById('reset-link');
+      const progressBar = document.getElementById('progress-bar');
+      const questionIndex = document.getElementById('question-index');
+      const questionText = document.getElementById('question-text');
+      const answersContainer = document.getElementById('answers');
+      const resultTitle = document.getElementById('result-title');
+      const resultMessage = document.getElementById('result-message');
+
+      let currentQuestion = 0;
+      let score = 0;
+      let selectedAnswer = null;
+
+      function showIntro() {
+        intro.classList.remove('hidden');
+        questionPanel.classList.add('hidden');
+        resultPanel.classList.add('hidden');
+        currentQuestion = 0;
+        score = 0;
+        selectedAnswer = null;
+        nextBtn.classList.add('hidden');
+      }
+
+      function renderQuestion() {
+        const question = questions[currentQuestion];
+
+        intro.classList.add('hidden');
+        questionPanel.classList.remove('hidden');
+        resultPanel.classList.add('hidden');
+
+        questionIndex.textContent = `Pergunta ${currentQuestion + 1}`;
+        questionText.textContent = question.question;
+        answersContainer.innerHTML = '';
+        selectedAnswer = null;
+        nextBtn.classList.add('hidden');
+
+        const percent = ((currentQuestion + 1) / questions.length) * 100;
+        progressBar.style.width = `${percent}%`;
+
+        question.options.forEach((option, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'answer-btn';
+          button.textContent = option;
+
+          button.addEventListener('click', () => {
+            if (selectedAnswer !== null) return;
+
+            selectedAnswer = index;
+            const isCorrect = index === question.correct;
+
+            if (isCorrect) {
+              score += 1;
+            }
+
+            Array.from(answersContainer.children).forEach((item, itemIndex) => {
+              item.classList.remove('selected');
+              if (itemIndex === question.correct) {
+                item.classList.add('correct');
+              }
+              if (itemIndex === index && !isCorrect) {
+                item.classList.add('wrong');
+              }
+            });
+
+            button.classList.add('selected');
+            nextBtn.classList.remove('hidden');
+          });
+
+          answersContainer.appendChild(button);
+        });
+      }
+
+      function showResult() {
+        questionPanel.classList.add('hidden');
+        resultPanel.classList.remove('hidden');
+
+        const percentage = Math.round((score / questions.length) * 100);
+
+        if (percentage >= 80) {
+          resultTitle.textContent = 'Excelente!';
+          resultMessage.textContent = `Você acertou ${score} de ${questions.length} perguntas. Sua compreensão sobre sustentabilidade está muito boa!`;
+        } else if (percentage >= 50) {
+          resultTitle.textContent = 'Bom desempenho!';
+          resultMessage.textContent = `Você acertou ${score} de ${questions.length} perguntas. Ainda dá para aprender mais sobre o planeta.`;
+        } else {
+          resultTitle.textContent = 'Vamos melhorar!';
+          resultMessage.textContent = `Você acertou ${score} de ${questions.length} perguntas. A prática de sustentabilidade é uma ótima área para continuar aprendendo.`;
+        }
+      }
+
+      startBtn.addEventListener('click', () => {
+        renderQuestion();
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentQuestion += 1;
+
+        if (currentQuestion < questions.length) {
+          renderQuestion();
+        } else {
+          showResult();
+        }
+      });
+
+      restartBtn.addEventListener('click', () => {
+        showIntro();
+      });
+
+      resetLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        showIntro();
+      });
+
+      showIntro();
+    </script>
+  </body>
+</html>
